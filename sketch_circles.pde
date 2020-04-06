@@ -29,23 +29,27 @@ class Krug {
     draw();
   }
 }
+int k=0;
+Krug ser[] = new Krug[0];
+
 void setup() {
   size(600,600);
   background(0);
-  for (int i=0; i<4; i++) {
-    Krug Circle = new Krug(random(40, 560), random(40, 560), 40);
-    ser = (Krug[])append(ser, Circle);
-    ser[i].draw();
-    ser[i].dx=random(-2.5, 2.5);
-    ser[i].dy=random(-2.5, 2.5);
-  }
 }
-Krug ser[] = new Krug[0];
 
 void draw() {
   background(0);
-  for (int i=0; i<4; i++) {
+  for (int i=0; i<k; i++) {
     ser[i].move();
   }
-  
+}
+void mousePressed() {
+  if (mouseButton == LEFT) {
+    Krug Circle = new Krug(mouseX, mouseY, 40);
+    ser = (Krug[])append(ser, Circle);
+    ser[k].draw();
+    ser[k].dx=random(-2.5, 2.5);
+    ser[k].dy=random(-2.5, 2.5);
+    k++;
+  }
 }
