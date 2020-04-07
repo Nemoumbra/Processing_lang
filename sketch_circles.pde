@@ -11,6 +11,11 @@ class Krug {
   void draw() {
     fill(cvet);
     ellipse(x,y,2*r,2*r);
+    stroke(cvet);
+    if (dx != 0 || dy != 0) {
+     line(x,y, x+ (dx*1.6*r)/sqrt(dx*dx+dy*dy), y+ (dy*1.6*r)/sqrt(dx*dx+dy*dy));
+    }
+    noStroke();
   }
   void move() {
     int a = round(random(10000));
@@ -50,6 +55,6 @@ void mousePressed() {
     ser[k].draw();
     ser[k].dx=random(-2.5, 2.5);
     ser[k].dy=random(-2.5, 2.5);
-    k++;
+    k++; 
   }
 }
