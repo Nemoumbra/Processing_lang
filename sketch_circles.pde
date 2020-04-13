@@ -8,6 +8,20 @@ class Krug {
     r=pr;
     cvet = round(random(80,220));
   }
+  void draw_eyes() {
+    stroke(0);
+    circle(x + 0.7*r*cos(angle+0.58), y + 0.7*r*sin(angle+0.58), r/3);
+    circle(x + 0.7*r*cos(angle-0.58), y + 0.7*r*sin(angle-0.58), r/3);
+    fill(0);
+    circle(x + 0.7*r*cos(angle+0.58), y + 0.7*r*sin(angle+0.58), r/9);
+    circle(x + 0.7*r*cos(angle-0.58), y + 0.7*r*sin(angle-0.58), r/9);
+    noFill();
+    stroke(cvet);
+  }
+  void draw_arms() {
+    line(x + 2*r*cos(angle+PI/2), y + 2*r*sin(angle+PI/2), x + 2*r*cos(angle-PI/2), y + 2*r*sin(angle-PI/2));
+  }
+  
   void draw() {
     stroke(200, 100, 0);
     if (d!=0) {
@@ -16,6 +30,8 @@ class Krug {
     noStroke();
     fill(cvet);
     circle(x,y,2*r);
+    draw_eyes();
+    draw_arms();
   }
   void move() {
     int a = round(random(10000));
