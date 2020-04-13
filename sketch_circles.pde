@@ -1,5 +1,5 @@
 class Krug {
-  float x,y,r, dx=0, dy=0;
+  float x,y,r, d=0, angle=0;
   boolean end_of_box=false;
   int cvet=0;
   Krug(float px, float py, float pr) {
@@ -9,23 +9,23 @@ class Krug {
     cvet = round(random(80,220));
   }
   void draw() {
-    fill(cvet);
-    ellipse(x,y,2*r,2*r);
-    stroke(cvet);
-    if (dx != 0 || dy != 0) {
-     line(x,y, x+ (dx*1.6*r)/sqrt(dx*dx+dy*dy), y+ (dy*1.6*r)/sqrt(dx*dx+dy*dy));
+    stroke(200, 100, 0);
+    if (d!=0) {
+     line(x, y, x+1.6*r*cos(angle), y + 1.6*r*sin(angle));
     }
     noStroke();
+    fill(cvet);
+    circle(x,y,2*r);
   }
   void move() {
     int a = round(random(10000));
     if (end_of_box || a%109 == 0) {
-    dx = random(-2.5, 2.5);
-    dy = random(-2.5, 2.5);
+    angle = random(-PI, PI);
+    d = random(0, 2.5);
     } //
-     if (x+r+dx<=600 && x-r+dx>=0 && y+r+dy<=600 && y-r+dy>=0){
-       x+=dx;
-       y+=dy;
+     if (x+r+d*cos(angle)<=600 && x-r+d*cos(angle)>=0 && y+r+d*sin(angle)<=600 && y-r+d*sin(angle)>=0){
+       x+=d*cos(angle);
+       y+=d*sin(angle);
        end_of_box=false;
     }
     else {
@@ -53,8 +53,8 @@ void mousePressed() {
     Krug Circle = new Krug(mouseX, mouseY, 40);
     ser = (Krug[])append(ser, Circle);
     ser[k].draw();
-    ser[k].dx=random(-2.5, 2.5);
-    ser[k].dy=random(-2.5, 2.5);
+    ser[k].d=random(0, 5);
+    ser[k].angle=random(-PI, PI);
     k++; 
   }
 }
