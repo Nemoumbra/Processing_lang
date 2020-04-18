@@ -1,12 +1,12 @@
 class Krug {
   float x,y,r, d=0, angle=0;
   boolean end_of_box=false, chosen=false;
-  int cvet=0;
+  int colour, cvet;
   Krug(float px, float py, float pr) {
     x=px;
     y=py;
     r=pr;
-    cvet = round(random(80,220));
+    colour = round(random(80,220));
   }
   void draw_eyes() {
     stroke(0);
@@ -62,6 +62,35 @@ class Krug {
 int k=0, n=0;
 Krug ser[] = new Krug[0];
 
+float F (float x1, float y1, float x2, float y2, float x) {
+  return x*(y2-y1)/(x2-x1) + (y1*x2-y2*x1)/(x2-x1);
+}
+void dotted_line (Krug target, Krug chosen_one) {
+  fill(250);
+  if (target.x == chosen_one.x) {
+    if (chosen_one.y > target.y) {
+      for (int i=round(chosen_one.y); i>=target.y; i-=15) {
+        circle(chosen_one.x, i, 4);
+      }
+    }
+    else { //chosen_one.y <= target.y
+      for (int i = round(chosen_one.y); i <= target.y; i+=15) {
+        circle(chosen_one.x, i, 4);
+      }
+    }
+  }
+  else if (target.x > chosen_one.x) {
+    for (int i = round(chosen_one.x); i <= target.x; i+=10) {
+      circle(i, F(target.x, target.y, chosen_one.x, chosen_one.y, i), 4);
+    }
+  }
+  else { //target.x < chosen_one.x
+    for (int i = round(chosen_one.x); i >= target.x; i-=10) {
+      circle(i, F(target.x, target.y, chosen_one.x, chosen_one.y, i), 4);
+    }
+  }
+}
+
 void setup() {
   size(600,600);
   background(0);
@@ -73,7 +102,14 @@ void draw() {
     if (!ser[i].chosen) {
      ser[i].move();
     }
-    else ser[i].draw();
+    else {
+      stroke(200);
+      for (int j=0; j<k; j++) {
+        if (j == n) continue;
+        dotted_line(ser[j], ser[n]);
+      }
+      ser[i].draw();
+    }
   }
 }
 void mousePressed() {
