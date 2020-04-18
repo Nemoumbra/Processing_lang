@@ -7,6 +7,7 @@ class Krug {
     y=py;
     r=pr;
     colour = round(random(80,220));
+    cvet = colour;
   }
   void draw_eyes() {
     stroke(0);
