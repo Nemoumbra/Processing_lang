@@ -1,13 +1,12 @@
 class Krug {
   float x,y,r, d=0, angle=0;
-  boolean end_of_box=false, chosen=false;
-  int colour, cvet;
+  boolean end_of_box=false, chosen=false, left=false, right=false;
+  int cvet;
   Krug(float px, float py, float pr) {
     x=px;
     y=py;
     r=pr;
-    colour = round(random(80,220));
-    cvet = colour;
+    cvet = round(random(80,220));
   }
   void draw_eyes() {
     stroke(0);
@@ -35,6 +34,14 @@ class Krug {
       fill(250, 0, 0);
       stroke(250,0,0);
     }
+    else if (left) {
+      fill(0, 200, 0);
+      stroke(0, 200, 0);
+    }
+    else if (right) {
+      fill(0, 0, 200);
+      stroke(0, 0, 200);
+    }
     else {
       fill(cvet);
       stroke(cvet);
@@ -61,34 +68,40 @@ class Krug {
   }
 }
 int k=0, n=0;
+boolean the_one_exists=false;
 Krug ser[] = new Krug[0];
 
-float F (float x1, float y1, float x2, float y2, float x) {
-  return x*(y2-y1)/(x2-x1) + (y1*x2-y2*x1)/(x2-x1);
+float F (float x) {
+  return (float)(x*x);
 }
 void dotted_line (Krug target, Krug chosen_one) {
-  fill(250);
-  if (target.x == chosen_one.x) {
-    if (chosen_one.y > target.y) {
-      for (int i=round(chosen_one.y); i>=target.y; i-=15) {
-        circle(chosen_one.x, i, 4);
-      }
+  float vx = target.x-chosen_one.x, vy = target.y-chosen_one.y;
+  float d = sqrt(F(vx)+F(vy));
+  //line(chosen_one.x, chosen_one.y, chosen_one.x+vx, chosen_one.y+vy);
+  if (d != 0) {
+   vx = vx / d;
+   vy = vy / d;
+   for (int i=0; i<50; i+=2) {
+     line(chosen_one.x+i*10*vx, chosen_one.y+i*10*vy, chosen_one.x + (i+1)*10*vx, chosen_one.y + (i+1)*10*vy);
+   }
+ }
+}
+void artist(Krug target, Krug chosen_one) {
+  float x2 = target.x - chosen_one.x, y2 = target.y - chosen_one.y;
+  float x1 = chosen_one.r*cos(chosen_one.angle), y1 = chosen_one.r*sin(chosen_one.angle);
+  if (x1*x2+y1*y2 > 0) {
+    if (y1*x2-x1*y2 >= 0) {
+      target.left=true;
+      target.right=false;
     }
-    else { //chosen_one.y <= target.y
-      for (int i = round(chosen_one.y); i <= target.y; i+=15) {
-        circle(chosen_one.x, i, 4);
-      }
+    else {
+      target.left=false;
+      target.right=true;
     }
   }
-  else if (target.x > chosen_one.x) {
-    for (int i = round(chosen_one.x); i <= target.x; i+=10) {
-      circle(i, F(target.x, target.y, chosen_one.x, chosen_one.y, i), 4);
-    }
-  }
-  else { //target.x < chosen_one.x
-    for (int i = round(chosen_one.x); i >= target.x; i-=10) {
-      circle(i, F(target.x, target.y, chosen_one.x, chosen_one.y, i), 4);
-    }
+  else {
+    target.left=false;
+    target.right=false;
   }
 }
 
@@ -99,7 +112,7 @@ void setup() {
 
 void draw() {
   background(0);
-  for (int i=0; i<k; i++) {
+  /*for (int i=0; i<k; i++) {
     if (!ser[i].chosen) {
      ser[i].move();
     }
@@ -110,6 +123,23 @@ void draw() {
         dotted_line(ser[j], ser[n]);
       }
       ser[i].draw();
+    }
+  }*/
+  if (the_one_exists) {
+   for (int i=0; i<k; i++) {
+     if (!ser[i].chosen) {
+       ser[i].move();
+       dotted_line(ser[i], ser[n]);
+       artist(ser[i], ser[n]);
+     }
+   }
+   for (int i=0; i<k; i++) {
+     ser[i].draw();
+   }
+  }
+  else {
+    for (int i=0; i<k; i++) {
+      ser[i].move();
     }
   }
 }
@@ -134,6 +164,7 @@ void keyPressed() {
        n--;
      }
      ser[n].chosen=true;
+     the_one_exists=true;
    }
    if (key == 'W' || key == 'w') {
      ser[n].chosen=false;
@@ -144,6 +175,7 @@ void keyPressed() {
        n++;
      }
      ser[n].chosen=true;
+     the_one_exists=true;
    }
    if (keyCode == LEFT) {
      ser[n].angle-=0.1;
