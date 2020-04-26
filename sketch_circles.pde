@@ -81,7 +81,7 @@ void dotted_line (Krug target, Krug chosen_one) {
   if (d != 0) {
    vx = vx / d;
    vy = vy / d;
-   for (int i=0; i<50; i+=2) {
+   for (int i=0; F(chosen_one.x +(i+1)*10*vx-target.x)+F(chosen_one.y + (i+1)*10*vy-target.y)>F(target.r); i+=2) {
      line(chosen_one.x+i*10*vx, chosen_one.y+i*10*vy, chosen_one.x + (i+1)*10*vx, chosen_one.y + (i+1)*10*vy);
    }
  }
