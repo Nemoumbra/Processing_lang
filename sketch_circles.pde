@@ -81,7 +81,7 @@ void dotted_line (Krug target, Krug chosen_one) {
   if (d != 0) {
    vx = vx / d;
    vy = vy / d;
-   for (int i=0; F(chosen_one.x +(i+1)*10*vx-target.x)+F(chosen_one.y + (i+1)*10*vy-target.y)>F(target.r); i+=2) {
+   for (int i=0; F(chosen_one.x +(i+1)*10*vx-target.x)+F(chosen_one.y + (i+1)*10*vy-target.y)>=F(target.r); i+=2) {
      line(chosen_one.x+i*10*vx, chosen_one.y+i*10*vy, chosen_one.x + (i+1)*10*vx, chosen_one.y + (i+1)*10*vy);
    }
  }
@@ -129,7 +129,9 @@ void draw() {
    for (int i=0; i<k; i++) {
      if (!ser[i].chosen) {
        ser[i].move();
-       dotted_line(ser[i], ser[n]);
+       if (ser[i].left || ser[i].right) {
+        dotted_line(ser[i], ser[n]);
+       }
        artist(ser[i], ser[n]);
      }
    }
@@ -177,21 +179,23 @@ void keyPressed() {
      ser[n].chosen=true;
      the_one_exists=true;
    }
-   if (keyCode == LEFT) {
-     ser[n].angle-=0.1;
-   }
-   if (keyCode == RIGHT) {
-     ser[n].angle+=0.1;
-   }
-   if (keyCode == UP) {
-     ser[n].d=4;
-     ser[n].x+=ser[n].d*cos(ser[n].angle);
-     ser[n].y+=ser[n].d*sin(ser[n].angle);
-   }
-   if (keyCode == DOWN) {
-     ser[n].d=4;
-     ser[n].x-=ser[n].d*cos(ser[n].angle);
-     ser[n].y-=ser[n].d*sin(ser[n].angle);
-   }
+   if (the_one_exists) {
+    if (keyCode == LEFT) {
+      ser[n].angle-=0.1;
+    }
+    if (keyCode == RIGHT) {
+      ser[n].angle+=0.1;
+    }
+    if (keyCode == UP) {
+      ser[n].d=4;
+      ser[n].x+=ser[n].d*cos(ser[n].angle);
+      ser[n].y+=ser[n].d*sin(ser[n].angle);
+    }
+    if (keyCode == DOWN) {
+      ser[n].d=4;
+      ser[n].x-=ser[n].d*cos(ser[n].angle);
+      ser[n].y-=ser[n].d*sin(ser[n].angle);
+    }
+  } 
  }
 }
