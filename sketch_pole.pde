@@ -1,10 +1,11 @@
 int pole[][];
-int size = 60;
-int t1=0, t2=0;
+int size = 100;
+int side = 600/size;
 void setup() {
   size(600,600);
   background(0);
   pole = new int[size][size];
+  been = new boolean[size][size];
   for (int i=0; i<size; i++) {
     for (int j=0; j<size; j++) {
       pole[i][j]=0;
@@ -15,43 +16,36 @@ void setup() {
 void draw() {
   background(0);
   for (int i=0; i<size; i++) {
-    for (int j=0; j<size; j++) {
-      switch(pole[i][j]) {
-        case 1 : {
-         noFill(); 
-         stroke(100, 150, 50);
-         square(10*i, 10*j, 10);
-         break;
+    for (int j=0; j<size; j++) { 
+        if (pole[i][j] == -1) {
+         //stroke(250, 0, 0);
+         //strokeWeight(1);
+         noStroke();
+         fill(100, 100, 100);
+         square(i*side, j*side, side);
         }
-        case 2 : {
-         noStroke(); 
-         fill(250, 0, 0);
-         square(i*10, j*10, 10);
-         noFill();
-         break;
-        }
-      }
     }
   }
 }
-void mouseMoved() {
-  if (!(t1 == mouseX/10 && t2 == mouseY/10)) {
-   if (pole[t1][t2] == 1)
-     pole[t1][t2]=0;
-   if (pole[mouseX/10][mouseY/10] == 0) {
-     pole[mouseX/10][mouseY/10]=1;
-     t1=mouseX/10; t2=mouseY/10;
-   }
-  }
-}
+
 void mousePressed() {
   if (mouseButton == LEFT) {
-    if (pole[mouseX/10][mouseY/10] == 1) {
-      pole[mouseX/10][mouseY/10]=2;
+    if (pole[mouseX/side][mouseY/side] == 0) {
+      pole[mouseX/side][mouseY/side]=-1;
     }
-    else if (pole[mouseX/10][mouseY/10] == 2){
-     pole[mouseX/10][mouseY/10]=1;
-     t1=mouseX/10; t2=mouseY/10;
+  }
+  else if (mouseButton == RIGHT) {
+    if (pole[mouseX/side][mouseY/side] == -1) {
+      pole[mouseX/side][mouseY/side]=0;
     }
+  }
+}
+
+void mouseDragged() {
+  if (mouseButton == LEFT) {
+    pole[mouseX/side][mouseY/side]=-1;
+  }
+  else if (mouseButton == RIGHT) {
+    pole[mouseX/side][mouseY/side]=0;
   }
 }
