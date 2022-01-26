@@ -1,13 +1,18 @@
 boolean circle_stroke = false;
+boolean clicking_allowed = false;
+
+
 
 PVector project(PVector a, PVector b) {
   PVector res = b.mult(a.dot(b) / b.magSq());
   return res;
 }
-
 float cross(PVector a, PVector b) {
   return a.x * b.y - a.y * b.x;
 }
+
+
+
 
 class Border {
   PVector left_up, right_bottom;
@@ -29,12 +34,21 @@ class Border {
     line(border.right_bottom.x, border.left_up.y, border.right_bottom.x, border.right_bottom.y);
   }
 }
+
+
+
+
 class Circle {
   float r/*, d=0, angle=0*/;
   int colour;
   PVector position;
   PVector speed, acceleration;
   float mass;
+  boolean special;
+  color special_color;
+  boolean opaque;
+  float opacity;
+  //float 
   Circle(float x, float y, float pr) {
     position = new PVector(x, y);
     r=pr;
@@ -42,6 +56,8 @@ class Circle {
     speed = new PVector(0, 0);
     acceleration = new PVector(0, 0);
     mass = 0;
+    special = false;
+    opaque = true;
   }
   Circle(PVector pos, float pr) {
     r = pr;
@@ -50,17 +66,54 @@ class Circle {
     speed = new PVector(0, 0);
     acceleration = new PVector(0, 0);
     mass = 0;
+    special = false;
+    opaque = true;
   }
   
   void draw() {
     strokeWeight(1);
     if (circle_stroke) {
-      stroke(200, 0, 0);
+      if (opaque) {
+        stroke(200, 0, 0);
+      }
+      else {
+        stroke(200, 0, 0, opacity);
+      }
     }
     else {
-      stroke(colour);
+      if (opaque) {
+        if (special) {
+          stroke(special_color);
+        }
+        else {
+          stroke(colour);
+        }
+      }
+      else {
+        if (special) {
+          stroke(special_color, opacity);
+        }
+        else {
+          stroke(colour, opacity);
+        }
+      }
     }
-    fill(colour);
+    if (opaque) {
+      if (special) {
+        fill(special_color);
+      } 
+      else {
+        fill(colour);
+      }
+    }
+    else {
+      if (special) {
+        fill(special_color, opacity);
+      } 
+      else {
+        fill(colour, opacity);
+      }
+    }
     circle(position.x, position.y, 2*r);
   }
   void move() {
@@ -70,6 +123,10 @@ class Circle {
     draw();
   }
 }
+
+
+
+
 
 Circle objects[] = new Circle[0];
 Border border = new Border(20, 20, 880, 880);
@@ -82,7 +139,13 @@ boolean uniform_grav_field = false;
 PVector g = new PVector(0, 0.05);
 float border_hit_loss = 0.0;
 boolean logging_on = false;
+boolean gravity = true;
 float G = 20.0;
+
+
+
+
+
 
 float distance_squared(float x1, float y1, float x2, float y2) {
   return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
@@ -90,18 +153,99 @@ float distance_squared(float x1, float y1, float x2, float y2) {
 void stop_time() {
   stopped_time = true;
 }
+void add_obj(Circle circle) {
+  objects = (Circle[]) append(objects, circle);
+  objects[obj_count].draw();
+  obj_count++;
+}
+
+
+class Trajectory {
+  ArrayList <Circle> path;
+  color colour;
+  int max_size;
+  int r;
+  int counter;
+  
+  Trajectory(int r, int max_size, color colour) {
+    this.r = r;
+    this.max_size = max_size;
+    this.colour = colour;
+    counter = 0;
+    path = new ArrayList<Circle>();
+  }
+  void add(PVector pos) {
+    if (path.size() == max_size) {
+      path.remove(0);
+    }
+    Circle obj = new Circle(pos, r);
+    obj.special = true;
+    obj.special_color = colour;
+    obj.opaque = false;
+    path.add(obj);
+  }
+  void draw() {
+    int i = 0;
+    for (Circle circle: path) {
+      i++;
+      circle.opacity = 100 * i/ (path.size() + 1);
+      circle.draw();
+    }
+  }
+}
+
+
 void setup() {
   size(900,900);
   background(0);
+  
+  Circle sun = new Circle(400, 400, 20);
+  sun.mass = 100000;
+  sun.special = true;
+  sun.special_color = #ffff00;
+  add_obj(sun);
+  
+  Circle planet = new Circle(100, 400, 5);
+  planet.mass = 1;
+  planet.special = true;
+  planet.special_color = #10ccff;
+  planet.speed.y = 1.82574;
+  add_obj(planet);
+  
+  G = 0.01;
 }
+
+
+Trajectory pseudo_ellipse = new Trajectory(1, 180, #ffffff);
+//232
+
 void draw() {
    background(0);
    
    textSize(24);
-   fill(0, 100, 0);
-   text("Uniform gravity: " + uniform_grav_field, 80, 45);
-   fill(100, 0, 0);
-   text("Time stopped: " + stopped_time, 600, 45);
+   fill(10, 100, 10);
+   text("Uniform gravity: " + uniform_grav_field, 40, 45);
+   fill(110, 40, 40);
+   text("Time stopped: " + stopped_time, 645, 45);
+   
+   if (fbf_debug_on) {
+     fill(40, 40, 100);
+     text("Frame-by-frame debug on", 300, 45);
+   }
+   
+   
+   fill(0);
+   stroke(#ff0000);
+   circle(400, 400, 600);
+   // draw trajectories
+   pseudo_ellipse.draw();
+   if (!(stopped_time || fbf_lock)) {
+     pseudo_ellipse.counter++;
+     pseudo_ellipse.counter %= 2;
+     if (pseudo_ellipse.counter == 0) {
+       pseudo_ellipse.add(objects[1].position.copy());
+     }
+   }
    
    border.draw();
    
@@ -116,13 +260,15 @@ void draw() {
          if (uniform_grav_field) {
            objects[i].acceleration.add(g);
          }
-         //now general gravity:
-         for (int j = i+1; j < obj_count; j++) {
-           PVector obj_i_obj_j = PVector.sub(objects[j].position, objects[i].position);
-           float r_squared = obj_i_obj_j.magSq();
-           obj_i_obj_j.normalize();
-           objects[i].acceleration.add(PVector.mult(obj_i_obj_j, G*objects[j].mass/r_squared));
-           objects[j].acceleration.add(PVector.mult(obj_i_obj_j, -G*objects[i].mass/r_squared));
+         //now general gravity/Kulon's forces:
+         if (gravity) {
+           for (int j = i+1; j < obj_count; j++) {
+             PVector obj_i_obj_j = PVector.sub(objects[j].position, objects[i].position);
+             float r_squared = obj_i_obj_j.magSq();
+             obj_i_obj_j.normalize();
+             objects[i].acceleration.add(PVector.mult(obj_i_obj_j, G*objects[j].mass/r_squared));
+             objects[j].acceleration.add(PVector.mult(obj_i_obj_j, -G*objects[i].mass/r_squared));
+           }
          }
          objects[i].move();
        }
@@ -210,18 +356,27 @@ void draw() {
    }
 }
 
+
+
+
+
+
+
 void mouseClicked() {
-  Circle obj = new Circle(mouseX, mouseY, round(random(30, 40)));
-  obj.acceleration.x = 0;
-  //obj.acceleration.y = 0.35;
-  obj.acceleration.y = 0.06;
-  obj.mass = round(random(1, 15));
-  obj.colour = round(obj.mass * 15);
-  //obj.mass = 10;
-  objects = (Circle[]) append(objects, obj);
-  objects[obj_count].draw();
-  obj_count++;
+  if (clicking_allowed) {
+    Circle obj = new Circle(mouseX, mouseY, round(random(30, 40)));
+    obj.acceleration.x = 0;
+    //obj.acceleration.y = 0.35;
+    //obj.acceleration.y = 0.06;
+    obj.mass = round(random(1, 15));
+    obj.colour = round(obj.mass * 15);
+    //obj.mass = 10;
+    objects = (Circle[]) append(objects, obj);
+    objects[obj_count].draw();
+    obj_count++;
+  }
 }
+
 
 void keyPressed() {
   if (key == 'T' || key == 't' || key == 'Е' || key == 'е') {
