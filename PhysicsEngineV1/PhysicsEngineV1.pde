@@ -1,253 +1,76 @@
-boolean circle_stroke = false;
-boolean clicking_allowed = false;
-
-
-
-PVector project(PVector a, PVector b) {
-  PVector res = b.mult(a.dot(b) / b.magSq());
-  return res;
-}
-float cross(PVector a, PVector b) {
-  return a.x * b.y - a.y * b.x;
-}
-
-
-
-
-class Border {
-  PVector left_up, right_bottom;
-  PVector up_norm, left_norm, right_norm, bottom_norm;
-  Border(float x1, float y1, float x2, float y2) {
-    left_up = new PVector(x1, y1);
-    right_bottom = new PVector(x2, y2);
-    up_norm = new PVector(0, -1);
-    bottom_norm = new PVector(0, 1);
-    left_norm = new PVector(-1, 0);
-    right_norm = new PVector(0, 1);
-  }
-  void draw() {
-    stroke(200, 100, 0);
-    strokeWeight(5);
-    line(border.left_up.x, border.left_up.y, border.left_up.x, border.right_bottom.y);
-    line(border.left_up.x, border.left_up.y, border.right_bottom.x, border.left_up.y);
-    line(border.left_up.x, border.right_bottom.y, border.right_bottom.x, border.right_bottom.y);
-    line(border.right_bottom.x, border.left_up.y, border.right_bottom.x, border.right_bottom.y);
-  }
-}
-
-
-
-
-class Circle {
-  float r/*, d=0, angle=0*/;
-  int colour;
-  PVector position;
-  PVector speed, acceleration;
-  float mass;
-  boolean special;
-  color special_color;
-  boolean opaque;
-  float opacity;
-  //float 
-  Circle(float x, float y, float pr) {
-    position = new PVector(x, y);
-    r=pr;
-    colour = round(random(80,220));
-    speed = new PVector(0, 0);
-    acceleration = new PVector(0, 0);
-    mass = 0;
-    special = false;
-    opaque = true;
-  }
-  Circle(PVector pos, float pr) {
-    r = pr;
-    colour = round(random(80,220));
-    position = pos.copy();
-    speed = new PVector(0, 0);
-    acceleration = new PVector(0, 0);
-    mass = 0;
-    special = false;
-    opaque = true;
-  }
-  
-  void draw() {
-    strokeWeight(1);
-    if (circle_stroke) {
-      if (opaque) {
-        stroke(200, 0, 0);
-      }
-      else {
-        stroke(200, 0, 0, opacity);
-      }
-    }
-    else {
-      if (opaque) {
-        if (special) {
-          stroke(special_color);
-        }
-        else {
-          stroke(colour);
-        }
-      }
-      else {
-        if (special) {
-          stroke(special_color, opacity);
-        }
-        else {
-          stroke(colour, opacity);
-        }
-      }
-    }
-    if (opaque) {
-      if (special) {
-        fill(special_color);
-      } 
-      else {
-        fill(colour);
-      }
-    }
-    else {
-      if (special) {
-        fill(special_color, opacity);
-      } 
-      else {
-        fill(colour, opacity);
-      }
-    }
-    circle(position.x, position.y, 2*r);
-  }
-  void move() {
-    //apply physics?
-    speed.add(acceleration);
-    position.add(speed);
-    draw();
-  }
-}
-
-
-
-
-
-Circle objects[] = new Circle[0];
-Border border = new Border(20, 20, 880, 880);
-int obj_count = 0;
-boolean stopped_time = true;
-float epsilon = 1;
-boolean fbf_debug_on = false;
-boolean fbf_lock = false;
-boolean uniform_grav_field = false;
-PVector g = new PVector(0, 0.05);
-float border_hit_loss = 0.0;
-boolean logging_on = false;
-boolean gravity = true;
-float G = 20.0;
-
-
-
-
-
-
-float distance_squared(float x1, float y1, float x2, float y2) {
-  return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-}
-void stop_time() {
-  stopped_time = true;
-}
-void add_obj(Circle circle) {
-  objects = (Circle[]) append(objects, circle);
-  objects[obj_count].draw();
-  obj_count++;
-}
-
-
-class Trajectory {
-  ArrayList <Circle> path;
-  color colour;
-  int max_size;
-  int r;
-  int counter;
-  
-  Trajectory(int r, int max_size, color colour) {
-    this.r = r;
-    this.max_size = max_size;
-    this.colour = colour;
-    counter = 0;
-    path = new ArrayList<Circle>();
-  }
-  void add(PVector pos) {
-    if (path.size() == max_size) {
-      path.remove(0);
-    }
-    Circle obj = new Circle(pos, r);
-    obj.special = true;
-    obj.special_color = colour;
-    obj.opaque = false;
-    path.add(obj);
-  }
-  void draw() {
-    int i = 0;
-    for (Circle circle: path) {
-      i++;
-      circle.opacity = 100 * i/ (path.size() + 1);
-      circle.draw();
-    }
-  }
-}
-
-
 void setup() {
   size(900,900);
   background(0);
+  cannon.setPower(5);
   
-  Circle sun = new Circle(400, 400, 20);
-  sun.mass = 100000;
-  sun.special = true;
-  sun.special_color = #ffff00;
-  add_obj(sun);
-  
-  Circle planet = new Circle(100, 400, 5);
-  planet.mass = 1;
-  planet.special = true;
-  planet.special_color = #10ccff;
-  planet.speed.y = 1.82574;
-  add_obj(planet);
-  
+  rocket.start_engines();
   G = 0.01;
 }
 
-
-Trajectory pseudo_ellipse = new Trajectory(1, 180, #ffffff);
-//232
-
 void draw() {
    background(0);
-   
-   textSize(24);
+   textSize(22);
    fill(10, 100, 10);
-   text("Uniform gravity: " + uniform_grav_field, 40, 45);
+   text("Uniform gravity on: " + uniform_grav_field, 38, 45);
    fill(110, 40, 40);
    text("Time stopped: " + stopped_time, 645, 45);
    
+   fill(110, 110, 0);
+   text("Air friction on: " + air_friction, 40, 70);
+   
    if (fbf_debug_on) {
      fill(40, 40, 100);
-     text("Frame-by-frame debug on", 300, 45);
+     text("Frame-by-frame debug on", 305, 45);
    }
    
    
-   fill(0);
-   stroke(#ff0000);
-   circle(400, 400, 600);
    // draw trajectories
-   pseudo_ellipse.draw();
    if (!(stopped_time || fbf_lock)) {
-     pseudo_ellipse.counter++;
-     pseudo_ellipse.counter %= 2;
-     if (pseudo_ellipse.counter == 0) {
-       pseudo_ellipse.add(objects[1].position.copy());
+     for (Trajectory traj : trails) {
+       traj.save_new();
+       traj.draw();
      }
    }
    
-   border.draw();
+   //float e = objects[1].speed.magSq() / 2 - G * objects[0].mass / (PVector.sub(objects[0].position, objects[1].position)).mag();
+   //if (e < 0) {
+     //float a = - G * objects[0].mass / (2*e);
+     //float L = objects[1].mass * (PVector.sub(objects[0].position, objects[1].position).cross(objects[1].speed)).mag();
+     //float b = L / sqrt(-2 * e * objects[1].mass * objects[1].mass);
+   //}
+   
+   cannon.draw();
+   
+   //for rocket we only count air drag and uniform gravity now
+   if (!(stopped_time || fbf_lock || rocket.immovable)) {
+     PVector rocket_forces = new PVector(0, 0);
+     if (uniform_grav_field && !perp_plane_g && rocket.position.y + 10 < border.right_bottom.y) {
+       rocket_forces.add(PVector.mult(g, rocket.cur_mass));
+     }
+     if (air_friction) {
+       rocket_forces.add(PVector.mult(rocket.speed, -air_fr_k));
+     }
+     rocket.move(rocket_forces);
+     if (rocket.position.y - 10 <= border.left_up.y) {
+       rocket.immovable = true;
+       rocket.speed.y = 0;
+       rocket.stop_engines();
+     }
+     if (rocket.position.y + 10 >= border.right_bottom.y) {
+       rocket.position.y = border.right_bottom.y - 10;
+     }
+   }
+   rocket.draw();
+   //else {
+   //  rocket.draw();
+   //}
+   
+   
+   if (borders_on) {
+     border.draw();
+   }
+   
+   
    
    if (!(stopped_time || fbf_lock)) {
      for (Circle circle: objects) {
@@ -257,7 +80,7 @@ void draw() {
    }
    for (int i = 0; i < obj_count; i++) {
        if (!(stopped_time || fbf_lock)) {
-         if (uniform_grav_field) {
+         if (uniform_grav_field && !perp_plane_g && !objects[i].immovable) {
            objects[i].acceleration.add(g);
          }
          //now general gravity/Kulon's forces:
@@ -266,8 +89,31 @@ void draw() {
              PVector obj_i_obj_j = PVector.sub(objects[j].position, objects[i].position);
              float r_squared = obj_i_obj_j.magSq();
              obj_i_obj_j.normalize();
-             objects[i].acceleration.add(PVector.mult(obj_i_obj_j, G*objects[j].mass/r_squared));
-             objects[j].acceleration.add(PVector.mult(obj_i_obj_j, -G*objects[i].mass/r_squared));
+             
+             if (!objects[i].immovable) {
+               objects[i].acceleration.add(PVector.mult(obj_i_obj_j, G*objects[j].mass/r_squared));
+             }
+             if (!objects[j].immovable) {
+               objects[j].acceleration.add(PVector.mult(obj_i_obj_j, -G*objects[i].mass/r_squared));
+             }
+           }
+         }
+         //now air friction
+         if (air_friction) {
+           objects[i].acceleration.add(PVector.mult(objects[i].speed, -air_fr_k / objects[i].mass));
+         }
+         
+         
+         //this has to be computed finally, after others.
+         if (uniform_grav_field && perp_plane_g) {
+           if (objects[i].acceleration.mag() <= mu * g.mag()) {
+             objects[i].acceleration.x = 0;
+             objects[i].acceleration.y = 0;
+           }
+           else {
+             if (objects[i].speed.mag() > 0) {
+               objects[i].acceleration.add(PVector.mult(objects[i].speed, -mu * g.mag() / objects[i].speed.mag()));
+             }
            }
          }
          objects[i].move();
@@ -309,44 +155,86 @@ void draw() {
          }
        }
        //now check borders
-       if (objects[i].position.x - objects[i].r <= border.left_up.x) {
-         if (logging_on) {
-           print("Left border hit start! Speed: ", objects[i].speed, "\n");
+       if (borders_on && !objects[i].immovable) {
+         
+         if (objects[i].position.x - objects[i].r <= border.left_up.x) {
+           if (logging_on) {
+             print("Left border hit start! Speed: ", objects[i].speed, "\n");
+           }
+           
+           if (objects[i].projectile) {
+             objects[i].immovable = true;
+             objects[i].speed.x = 0;
+             objects[i].speed.y = 0;
+           }
+           else {
+             objects[i].speed.x *= -1;
+             objects[i].speed.mult(sqrt(1 - border_hit_loss));
+           }
+           
+           if (logging_on) {
+             print("Left border hit end! Speed: ", objects[i].speed, "\n");
+           }
          }
-         objects[i].speed.x *= -1;
-         objects[i].speed.mult(sqrt(1 - border_hit_loss));
-         if (logging_on) {
-           print("Left border hit end! Speed: ", objects[i].speed, "\n");
+         
+         if (objects[i].position.y - objects[i].r <= border.left_up.y) {
+           if (logging_on) {
+             print("Up border hit start! Speed: ", objects[i].speed, "\n");
+           }
+           
+           if (objects[i].projectile) {
+             objects[i].immovable = true;
+             objects[i].speed.x = 0;
+             objects[i].speed.y = 0;
+           }
+           else {
+             objects[i].speed.y *= -1;
+             objects[i].speed.mult(sqrt(1 - border_hit_loss));
+           }
+           
+           if (logging_on) {
+             print("Up border hit end! Speed: ", objects[i].speed, "\n");
+           }
          }
-       }
-       if (objects[i].position.y - objects[i].r <= border.left_up.y) {
-         if (logging_on) {
-           print("Up border hit start! Speed: ", objects[i].speed, "\n");
+         
+         if (objects[i].position.x + objects[i].r >= border.right_bottom.x) {
+           if (logging_on) {
+             print("Right border hit start! Speed: ", objects[i].speed, "\n");
+           }
+           
+           if (objects[i].projectile) {
+             objects[i].immovable = true;
+             objects[i].speed.x = 0;
+             objects[i].speed.y = 0;
+           }
+           else {
+             objects[i].speed.x *= -1;
+             objects[i].speed.mult(sqrt(1 - border_hit_loss));
+           }
+           
+           if (logging_on) {
+             print("Right border hit end! Speed: ", objects[i].speed, "\n");
+           }
          }
-         objects[i].speed.y *= -1;
-         objects[i].speed.mult(sqrt(1 - border_hit_loss));
-         if (logging_on) {
-           print("Up border hit end! Speed: ", objects[i].speed, "\n");
-         }
-       }
-       if (objects[i].position.x + objects[i].r >= border.right_bottom.x) {
-         if (logging_on) {
-           print("Right border hit start! Speed: ", objects[i].speed, "\n");
-         }
-         objects[i].speed.x *= -1;
-         objects[i].speed.mult(sqrt(1 - border_hit_loss));
-         if (logging_on) {
-           print("Right border hit end! Speed: ", objects[i].speed, "\n");
-         }
-       }
-       if (objects[i].position.y + objects[i].r >= border.right_bottom.y) {
-         if (logging_on) {
-           print("Bottom border hit start! Speed: ", objects[i].speed, "\n");
-         }
-         objects[i].speed.y *= -1;
-         objects[i].speed.mult(sqrt(1 - border_hit_loss));
-         if (logging_on) {
-           print("Bottom border hit end! Speed: ", objects[i].speed, "\n");
+         
+         if (objects[i].position.y + objects[i].r >= border.right_bottom.y) {
+           if (logging_on) {
+             print("Bottom border hit start! Speed: ", objects[i].speed, "\n");
+           }
+           
+           if (objects[i].projectile) {
+             objects[i].immovable = true;
+             objects[i].speed.x = 0;
+             objects[i].speed.y = 0;
+           }
+           else {
+             objects[i].speed.x *= -1;
+             objects[i].speed.mult(sqrt(1 - border_hit_loss));
+           }
+           
+           if (logging_on) {
+             print("Bottom border hit end! Speed: ", objects[i].speed, "\n");
+           }
          }
        }
      }
@@ -354,57 +242,4 @@ void draw() {
        fbf_lock = true;
      }
    }
-}
-
-
-
-
-
-
-
-void mouseClicked() {
-  if (clicking_allowed) {
-    Circle obj = new Circle(mouseX, mouseY, round(random(30, 40)));
-    obj.acceleration.x = 0;
-    //obj.acceleration.y = 0.35;
-    //obj.acceleration.y = 0.06;
-    obj.mass = round(random(1, 15));
-    obj.colour = round(obj.mass * 15);
-    //obj.mass = 10;
-    objects = (Circle[]) append(objects, obj);
-    objects[obj_count].draw();
-    obj_count++;
-  }
-}
-
-
-void keyPressed() {
-  if (key == 'T' || key == 't' || key == 'Е' || key == 'е') {
-    stopped_time = !stopped_time;
-  }
-  if (key == ' ') {
-    objects[0].speed.x += 0.3;
-    objects[0].speed.y -= 0.4;
-  }
-  if (key == 'D' || key == 'd' || key == 'В' || key == 'в') {
-    if (fbf_debug_on) {
-      fbf_debug_on = false;
-      fbf_lock = false;
-    }
-    else {
-      fbf_debug_on = true;
-      fbf_lock = false;
-    }
-  }
-  if (fbf_debug_on) {
-    if (key == 'F' || key == 'f' || key == 'А' || key == 'а') {
-      fbf_lock = false;
-    }
-  }
-  if (key == 'G' || key == 'g' || key == 'П' || key == 'п') {
-    uniform_grav_field = !uniform_grav_field;
-  }
-  if (key == 'L' || key == 'l' || key == 'Д' || key == 'д') {
-    logging_on = !logging_on;
-  }
 }
