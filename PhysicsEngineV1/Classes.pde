@@ -233,6 +233,7 @@ class Rocket {
   float dM; // when engines are on, rocket looses "minus this value" of mass every frame
   float rocket_mass;
   float cur_mass;
+  float st_mass_minus_r_mass;
   color colour;
   boolean engines_on;
   boolean immovable;
@@ -241,6 +242,7 @@ class Rocket {
   Rocket(float x, float y, color colour, color empty, PVector gas, float start_mass, float rocket_mass, float per_frame_losses) {
     position = new PVector(x, y);
     gas_jet_speed = gas.copy();
+    st_mass_minus_r_mass = start_mass - rocket_mass;
     cur_mass = start_mass;
     dM = - per_frame_losses;
     this.colour = colour;
@@ -253,6 +255,7 @@ class Rocket {
   Rocket(PVector pos, color colour, color empty, PVector gas, float start_mass, float rocket_mass, float per_frame_losses) {
     position = pos.copy();
     gas_jet_speed = gas.copy();
+    st_mass_minus_r_mass = start_mass - rocket_mass;
     cur_mass = start_mass;
     dM = - per_frame_losses;
     this.colour = colour;
@@ -266,7 +269,13 @@ class Rocket {
   void draw() {
     fill(colour);
     stroke(colour);
-    rect(position.x - 3, position.y - 10, 6, 20);
+    float l = 20/st_mass_minus_r_mass * (cur_mass - rocket_mass);
+    rect(position.x - 3, position.y + 10 - l, 6, l);
+    fill(empty);
+    if (l != 20) {
+      stroke(empty);
+    }
+    rect(position.x - 3, position.y - 10, 6, 20 - 20/st_mass_minus_r_mass * (cur_mass - rocket_mass));
   }
   
   void start_engines() {
