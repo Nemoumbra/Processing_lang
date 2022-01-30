@@ -1,8 +1,9 @@
+// That's just a box to keep objects from leaving the screen
 class Border {
   PVector left_up, right_bottom;
   PVector up_norm, left_norm, right_norm, bottom_norm;
   Border(float x1, float y1, float x2, float y2) {
-    left_up = new PVector(x1, y1);
+    left_up = new PVector(x1, y1); //corners
     right_bottom = new PVector(x2, y2);
     up_norm = new PVector(0, -1);
     bottom_norm = new PVector(0, 1);
@@ -18,19 +19,19 @@ class Border {
     line(border.right_bottom.x, border.left_up.y, border.right_bottom.x, border.right_bottom.y);
   }
 }
-
+// Main class for any circle-shaped thing, like projectiles
 class Circle {
   float r/*, d=0, angle=0*/;
   int colour;
   PVector position;
   PVector speed, acceleration;
   float mass;
-  boolean special;
+  boolean special; // in case a special color is requested by the user
   color special_color;
-  boolean opaque;
+  boolean opaque; // mainly for trajectories
   float opacity;
-  boolean immovable;
-  boolean projectile;
+  boolean immovable; // position is supposed to remain constant
+  boolean projectile; // this is a marker for shots from the cannon
   //float 
   Circle(float x, float y, float pr) {
     position = new PVector(x, y);
@@ -112,7 +113,7 @@ class Circle {
     draw();
   }
 }
-
+//This class represents a trail which is left behind a moving circle
 class Trajectory {
   ArrayList <Circle> path;
   color colour;
@@ -152,7 +153,7 @@ class Trajectory {
     int i = 0;
     for (Circle circle: path) {
       i++;
-      circle.opacity = 100 * i/ (path.size() + 1);
+      circle.opacity = 100 * i/ (path.size() + 1); //circles get more and more transparent as the time goes on until they are removed from the array
       circle.draw();
     }
   }
@@ -161,7 +162,7 @@ class Trajectory {
 //class Projectile extends Circle {
   
 //}
-
+//This immovable shape cannot react with objects and has no special support in draw() function
 class Cannon {
   PVector position;
   int r;
@@ -195,7 +196,7 @@ class Cannon {
     power = new_power;
   }
   
-  Circle shoot(float angle) {
+  Circle shoot(float angle) { // shoot(0) means shoot in the direction specified by field "direction"
     Circle res = new Circle(position, r);
     res.special = true;
     res.special_color = colour;
@@ -225,7 +226,8 @@ class Cannon {
     line(position.x + 5, position.y + 5, position.x + 5 + 40 * cos(radians(cur_angle)), position.y + 5 - 40 * sin(radians(cur_angle)));
   }
 }
-
+// A standart rectangular-shaped rocket, which is only affected by air drag and uniform gravity field facing parallel to the main plane.
+// Can only move along some line and has no special support in draw() function
 class Rocket {
   PVector position;
   PVector speed;
@@ -269,7 +271,7 @@ class Rocket {
   void draw() {
     fill(colour);
     stroke(colour);
-    float l = 20/st_mass_minus_r_mass * (cur_mass - rocket_mass);
+    float l = 20/st_mass_minus_r_mass * (cur_mass - rocket_mass); // the rocket is colored in such way that it would represent how much fuel is left (in %)
     rect(position.x - 3, position.y + 10 - l, 6, l);
     fill(empty);
     if (l != 20) {
